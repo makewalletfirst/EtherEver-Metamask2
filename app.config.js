@@ -1,0 +1,78 @@
+const { RUNTIME_VERSION, PROJECT_ID, UPDATE_URL } = require('./ota.config.js');
+
+module.exports = {
+  name: 'MetaMask',
+  displayName: 'MetaMask',
+  experiments: {
+    reactCompiler: {
+      enabled: true,
+    },
+  },
+  plugins: [
+    [
+      'expo-build-properties',
+      {
+        android: {
+          extraMavenRepos: [
+            '../../node_modules/@notifee/react-native/android/libs',
+          ],
+        },
+        ios: {
+          jsEngine: 'hermes',
+        },
+      },
+    ],
+    [
+      '@config-plugins/detox',
+      {
+        subdomains: '*',
+      },
+    ],
+
+    'expo-apple-authentication',
+    [
+      'expo-screen-orientation',
+      {
+        initialOrientation: 'PORTRAIT',
+      },
+    ],
+  ],
+  android: {
+    package:
+      process.env.METAMASK_BUILD_TYPE === 'flask'
+        ? 'io.metamask.flask'
+        : 'io.metamask', // Required for @expo/repack-app Android repacking
+  },
+  ios: {
+    bundleIdentifier: 'io.metamask.MetaMask',
+    usesAppleSignIn: true,
+    jsEngine: 'hermes',
+  },
+  expo: {
+    owner: 'metamask-test',
+    runtimeVersion: RUNTIME_VERSION,
+    updates: {
+      codeSigningCertificate: './certs/certificate.pem',
+      codeSigningMetadata: {
+        keyid: 'main',
+        alg: 'rsa-v1_5-sha256',
+      },
+      url: UPDATE_URL,
+      // Channel is set by requestHeaders, will be overridden with build script
+      requestHeaders: {
+        'expo-channel-name': 'preview',
+      },
+    },
+    extra: {
+      eas: {
+        projectId: PROJECT_ID,
+      },
+    },
+    android: {
+      package: 'io.metamask',
+    },
+    ios: {
+      bundleIdentifier: 'io.metamask.MetaMask',
+    },
+  },
+};

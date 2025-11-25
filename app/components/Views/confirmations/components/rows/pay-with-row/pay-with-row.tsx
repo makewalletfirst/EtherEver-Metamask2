@@ -1,0 +1,103 @@
+import React, { useCallback, useMemo } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import Routes from '../../../../../../constants/navigation/Routes';
+import { TokenIcon } from '../../token-icon';
+import { useTransactionPayToken } from '../../../hooks/pay/useTransactionPayToken';
+import { TouchableOpacity } from 'react-native';
+import { Box } from '../../../../../UI/Box/Box';
+import {
+  AlignItems,
+  FlexDirection,
+  JustifyContent,
+} from '../../../../../UI/Box/box.types';
+import Text, {
+  TextColor,
+  TextVariant,
+} from '../../../../../../component-library/components/Texts/Text';
+import { useStyles } from '../../../../../hooks/useStyles';
+import styleSheet from './pay-with-row.styles';
+import { BigNumber } from 'bignumber.js';
+import { strings } from '../../../../../../../locales/i18n';
+import { useTransactionMetadataRequest } from '../../../hooks/transactions/useTransactionMetadataRequest';
+import { isHardwareAccount } from '../../../../../../util/address';
+import { Skeleton } from '../../../../../../component-library/components/Skeleton';
+import Icon, {
+  IconColor,
+  IconName,
+  IconSize,
+} from '../../../../../../component-library/components/Icons/Icon';
+import useFiatFormatter from '../../../../../UI/SimulationDetails/FiatDisplay/useFiatFormatter';
+
+export function PayWithRow() {
+  const navigation = useNavigation();
+  const { payToken } = useTransactionPayToken();
+  const formatFiat = useFiatFormatter({ currency: 'usd' });
+  const { styles } = useStyles(styleSheet, {});
+
+  const {
+    txParams: { from },
+  } = useTransactionMetadataRequest() ?? { txParams: {} };
+
+  const canEdit = !isHardwareAccount(from ?? '');
+
+  const handleClick = useCallback(() => {
+    if (!canEdit) return;
+
+    navigation.navigate(Routes.CONFIRMATION_PAY_WITH_MODAL);
+  }, [canEdit, navigation]);
+
+  const balanceUsdFormatted = useMemo(
+    () => formatFiat(new BigNumber(payToken?.balanceUsd ?? '0')),
+    [formatFiat, payToken?.balanceUsd],
+  );
+
+  if (!payToken) {
+    return <PayWithRowSkeleton />;
+  }
+
+  return (
+    <TouchableOpacity onPress={handleClick} disabled={!canEdit}>
+      <Box
+        flexDirection={FlexDirection.Row}
+        alignItems={AlignItems.center}
+        justifyContent={JustifyContent.center}
+        gap={12}
+        style={styles.container}
+      >
+        <TokenIcon address={payToken.address} chainId={payToken.chainId} />
+        <Text variant={TextVariant.BodyMDMedium} color={TextColor.Default}>
+          {`${strings('confirm.label.pay_with')} ${payToken.symbol}`}
+        </Text>
+        <Text variant={TextVariant.BodyMDMedium} color={TextColor.Alternative}>
+          {balanceUsdFormatted}
+        </Text>
+        {canEdit && from && (
+          <Icon
+            name={IconName.ArrowDown}
+            size={IconSize.Sm}
+            color={IconColor.Alternative}
+          />
+        )}
+      </Box>
+    </TouchableOpacity>
+  );
+}
+
+export function PayWithRowSkeleton() {
+  const { styles } = useStyles(styleSheet, {});
+
+  return (
+    <Box
+      testID="pay-with-row-skeleton"
+      flexDirection={FlexDirection.Row}
+      alignItems={AlignItems.center}
+      justifyContent={JustifyContent.center}
+      gap={8}
+      style={styles.container}
+    >
+      <Skeleton height={32} width={32} style={styles.skeletonCircle} />
+      <Skeleton height={18} width={100} style={styles.skeletonTop} />
+      <Skeleton height={18} width={100} style={styles.skeletonTop} />
+    </Box>
+  );
+}
