@@ -30,7 +30,17 @@ jobs:
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
-
+      # [추가된 부분] 구식 'compile' 키워드를 'implementation'으로 대체
+      - name: Fix Deprecated Gradle Syntax
+        run: |
+          # 1. aes-crypto 라이브러리 내의 build.gradle 파일 경로 설정
+          FILE_PATH=node_modules/react-native-aes-crypto-forked/android/build.gradle
+          
+          # 2. 'compile ' 키워드를 'implementation ' 으로 대체
+          # 이 명령어는 해당 파일 내의 모든 'compile '을 'implementation '으로 변경합니다.
+          sed -i 's/compile /implementation /g' $FILE_PATH
+          
+          echo "Fixed deprecated 'compile' syntax in $FILE_PATH"
       # [수정됨] 사용자가 지적한 환경 설정 파일 및 구글 서비스 파일 복사
       - name: Create Config Files
         run: |
