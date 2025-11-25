@@ -1,4 +1,4 @@
-ame: Android Release Build
+name: Android Release Build
 
 on:
 workflow_dispatch: # 수동 실행 버튼 활성화
