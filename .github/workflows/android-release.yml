@@ -36,10 +36,13 @@ jobs:
       # [수정됨] Gradle 종속성 키워드와 SDK 버전 문제를 해결합니다.
       - name: Fix Deprecated Gradle Syntax and SDK Version
         run: |
-          # 1. react-native-aes-crypto-forked: compile -> implementation
+          # 1. react-native-aes-crypto-forked: compile -> implementation + SDK Version 35로 수정 (업데이트)
           FILE_PATH_CRYPTO=node_modules/react-native-aes-crypto-forked/android/build.gradle
           sed -i 's/compile /implementation /g' $FILE_PATH_CRYPTO
-          echo "Fixed deprecated 'compile' in $FILE_PATH_CRYPTO"
+          # SDK Version 강제 수정 추가
+          sed -i '/compileSdkVersion/c\    compileSdkVersion 35' $FILE_PATH_CRYPTO
+          sed -i '/targetSdkVersion/c\    targetSdkVersion 35' $FILE_PATH_CRYPTO
+          echo "Fixed deprecated 'compile' and set SDK Version to 35 in $FILE_PATH_CRYPTO"
 
           # 2. react-native-i18n: compile -> implementation
           FILE_PATH_I18N=node_modules/react-native-i18n/android/build.gradle
