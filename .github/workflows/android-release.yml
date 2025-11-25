@@ -34,32 +34,29 @@ jobs:
         run: yarn install --frozen-lockfile
         
       # [수정됨] Gradle 종속성 키워드와 SDK 버전 문제를 해결합니다.
-      - name: Fix Deprecated Gradle Syntax and SDK Version
-        run: |
-          # 1. react-native-aes-crypto-forked: compile -> implementation
-          FILE_PATH_CRYPTO=node_modules/react-native-aes-crypto-forked/android/build.gradle
-          sed -i 's/compile /implementation /g' $FILE_PATH_CRYPTO
-          echo "Fixed deprecated 'compile' in $FILE_PATH_CRYPTO"
+      - name: Fix Deprecated Gradle Syntax and SDK Version
+        run: |
+          # 1. react-native-aes-crypto-forked: compile -> implementation
+          FILE_PATH_CRYPTO=node_modules/react-native-aes-crypto-forked/android/build.gradle
+          sed -i 's/compile /implementation /g' $FILE_PATH_CRYPTO
+          echo "Fixed deprecated 'compile' in $FILE_PATH_CRYPTO"
 
-          # 2. react-native-i18n: compile -> implementation
-          FILE_PATH_I18N=node_modules/react-native-i18n/android/build.gradle
-          sed -i 's/compile /implementation /g' $FILE_PATH_I18N
-          echo "Fixed deprecated 'compile' in $FILE_PATH_I18N"
+          # 2. react-native-i18n: compile -> implementation
+          FILE_PATH_I18N=node_modules/react-native-i18n/android/build.gradle
+          sed -i 's/compile /implementation /g' $FILE_PATH_I18N
+          echo "Fixed deprecated 'compile' in $FILE_PATH_I18N"
 
-          # 3. react-native-os: compile -> implementation
-          FILE_PATH_OS=node_modules/react-native-os/android/build.gradle
-          sed -i 's/compile /implementation /g' $FILE_PATH_OS
-          echo "Fixed deprecated 'compile' in $FILE_PATH_OS"
+          # 3. react-native-os: compile -> implementation
+          FILE_PATH_OS=node_modules/react-native-os/android/build.gradle
+          sed -i 's/compile /implementation /g' $FILE_PATH_OS
+          echo "Fixed deprecated 'compile' in $FILE_PATH_OS"
 
-          # 4. metamask_react-native-payments: compileSdkVersion 강제 35로 수정 (새로 추가)
-          FILE_PATH_PAYMENTS=node_modules/@metamask/react-native-payments/android/build.gradle
-          # 'compileSdkVersion'을 찾아서 '35'로 치환 (원래 값이 29 등으로 하드코딩되어 있을 수 있음)
-          sed -i '/compileSdkVersion/c\    compileSdkVersion 35' $FILE_PATH_PAYMENTS
-          # 'targetSdkVersion'도 함께 35로 치환하여 일관성을 유지
-          sed -i '/targetSdkVersion/c\    targetSdkVersion 35' $FILE_PATH_PAYMENTS
-          echo "Forced compile/targetSdkVersion to 35 in $FILE_PATH_PAYMENTS"
-      
-
+          # 4. metamask_react-native-payments: compileSdkVersion 강제 35로 수정
+          FILE_PATH_PAYMENTS=node_modules/@metamask/react-native-payments/android/build.gradle
+          sed -i '/compileSdkVersion/c\    compileSdkVersion 35' $FILE_PATH_PAYMENTS
+          sed -i '/targetSdkVersion/c\    targetSdkVersion 35' $FILE_PATH_PAYMENTS
+          echo "Forced compile/targetSdkVersion to 35 in $FILE_PATH_PAYMENTS"
+          
       # MetaMask 빌드에 필요한 환경 설정 파일들을 복사합니다.
       - name: Create Config Files
         run: |
