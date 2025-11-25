@@ -33,18 +33,23 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
-      # [수정됨] 두 개의 라이브러리 파일에서 'compile' 키워드를 'implementation'으로 수정합니다.
-      - name: Fix Deprecated Gradle Syntax
-        run: |
-          # 1. react-native-aes-crypto-forked 수정
-          FILE_PATH_CRYPTO=node_modules/react-native-aes-crypto-forked/android/build.gradle
-          sed -i 's/compile /implementation /g' $FILE_PATH_CRYPTO
-          echo "Fixed deprecated 'compile' in $FILE_PATH_CRYPTO"
+      # [수정됨] 세 개의 라이브러리 파일에서 'compile' 키워드를 'implementation'으로 수정합니다.
+      - name: Fix Deprecated Gradle Syntax
+        run: |
+          # 1. react-native-aes-crypto-forked 수정
+          FILE_PATH_CRYPTO=node_modules/react-native-aes-crypto-forked/android/build.gradle
+          sed -i 's/compile /implementation /g' $FILE_PATH_CRYPTO
+          echo "Fixed deprecated 'compile' in $FILE_PATH_CRYPTO"
 
-          # 2. react-native-i18n 수정 (새로 추가됨)
-          FILE_PATH_I18N=node_modules/react-native-i18n/android/build.gradle
-          sed -i 's/compile /implementation /g' $FILE_PATH_I18N
-          echo "Fixed deprecated 'compile' in $FILE_PATH_I18N"
+          # 2. react-native-i18n 수정
+          FILE_PATH_I18N=node_modules/react-native-i18n/android/build.gradle
+          sed -i 's/compile /implementation /g' $FILE_PATH_I18N
+          echo "Fixed deprecated 'compile' in $FILE_PATH_I18N"
+
+          # 3. react-native-os 수정 (<- 이 부분을 새로 추가)
+          FILE_PATH_OS=node_modules/react-native-os/android/build.gradle
+          sed -i 's/compile /implementation /g' $FILE_PATH_OS
+          echo "Fixed deprecated 'compile' in $FILE_PATH_OS"
 
 
       # MetaMask 빌드에 필요한 환경 설정 파일들을 복사합니다.
