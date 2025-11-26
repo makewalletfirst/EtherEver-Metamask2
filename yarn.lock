@@ -24634,14 +24634,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"compare-versions@npm:^3.6.0":
-  version: 3.6.0
-  resolution: "compare-versions@npm:3.6.0"
-  checksum: 10/7492a50cdaa2c27f5254eee7c4b38856e1c164991bab3d98d7fd067fe4b570d47123ecb92523b78338be86aa221668fd3868bfe8caa5587dc3ebbe1a03d52b5d
-  languageName: node
-  linkType: hard
-
-"compare-versions@npm:^6.0.0, compare-versions@npm:^6.1.0":
+"compare-versions@npm:^6.0.0, compare-versions@npm:^6.1.0, compare-versions@npm:^6.1.1":
   version: 6.1.1
   resolution: "compare-versions@npm:6.1.1"
   checksum: 10/9325c0fadfba81afa0ec17e6fc2ef823ba785c693089698b8d9374e5460509f1916a88591644d4cb4045c9a58e47fafbcc0724fe8bf446d2a875a3d6eeddf165
@@ -35733,7 +35726,7 @@ __metadata:
     buffer: "npm:6.0.3"
     chromedriver: "npm:^123.0.1"
     cockatiel: "npm:^3.1.2"
-    compare-versions: "npm:^3.6.0"
+    compare-versions: "npm:^6.1.1"
     content-hash: "npm:2.5.2"
     contentful: "npm:^11.5.22"
     cron-parser: "npm:^4.9.0"
