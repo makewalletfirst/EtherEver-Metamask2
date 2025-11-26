@@ -82,8 +82,8 @@ jobs:
           # --- [C] [중요] Android Lint 완전 차단 (build.gradle 수정) ---
           
           # app/build.gradle 파일에 lintOptions 블록을 강제로 삽입하여 Release 빌드 시 검사를 끕니다.
-          # 'android {' 바로 다음 줄에 설정을 끼워넣습니다.
           FILE_APP_GRADLE=android/app/build.gradle
+          # 이미 lintOptions가 있을 수 있으니 안전하게 android 블록 시작 직후에 삽입
           sed -i '/android {/a\    lintOptions {\n        checkReleaseBuilds false\n        abortOnError false\n    }' $FILE_APP_GRADLE
           echo "Inject lintOptions to disable checkReleaseBuilds into $FILE_APP_GRADLE"
 
@@ -107,17 +107,25 @@ jobs:
           MYAPP_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           MYAPP_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           SENTRY_DISABLE_AUTO_UPLOAD: true
-          # [핵심] Node.js 메모리 한도를 4GB로 늘립니다. (기본값은 약 2GB라 자주 터짐)
+          # Node.js 메모리 4GB
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
           chmod +x gradlew
           
+          # [수정됨] -x lintVitalRelease 옵션 제거 (모호함 해결)
+          # build.gradle 수정(checkReleaseBuilds false) 덕분에 굳이 제외 안 해도 에러 안 남
           ./gradlew assembleRelease \
             --no-daemon \
             --max-workers=2 \
             -PreactNativeArchitectures=arm64-v8a,armeabi-v7a \
             -Dorg.gradle.jvmargs="-Xmx3072m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError" \
             -x lint \
-            -x lintVitalRelease \
             -x test \
             --stacktrace
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 3
