@@ -17597,6 +17597,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/cheerio@npm:^0.22.22":
+  version: 0.22.35
+  resolution: "@types/cheerio@npm:0.22.35"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10/7d834512df4682733ce2ff1010682251d2d597d4c2f035b5ae43125a18b8a14c37d805d7c7ebcf57be360259c989465c5fd7b9dc21159b6719760d3d7fbd927f
+  languageName: node
+  linkType: hard
+
 "@types/cli-progress@npm:^3.11.0":
   version: 3.11.6
   resolution: "@types/cli-progress@npm:3.11.6"
@@ -27103,14 +27112,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"enzyme-to-json@npm:3.3.5":
-  version: 3.3.5
-  resolution: "enzyme-to-json@npm:3.3.5"
+"enzyme-to-json@npm:3.6.2":
+  version: 3.6.2
+  resolution: "enzyme-to-json@npm:3.6.2"
   dependencies:
-    lodash: "npm:^4.17.4"
+    "@types/cheerio": "npm:^0.22.22"
+    lodash: "npm:^4.17.21"
+    react-is: "npm:^16.12.0"
   peerDependencies:
-    enzyme: ^3.0.0
-  checksum: 10/635552e432ab5291f6c221577b66c69b11eb104be4ce5a1f0c82377791c94050a81bb99df6f99dcad0261133627722f782848f18eaaa30e1b2b663a5a71852a7
+    enzyme: ^3.4.0
+  checksum: 10/82461f5350512d9d9a46aaca1879c2ecb64273fbbcae32b134e8f288894bdaa244643c8108d6822400f65be579165959a3f3930bf6cbf2d15a05918b3d98a553
   languageName: node
   linkType: hard
 
@@ -35749,7 +35760,7 @@ __metadata:
     eciesjs: "npm:^0.3.15"
     enzyme: "npm:3.9.0"
     enzyme-adapter-react-16: "npm:1.10.0"
-    enzyme-to-json: "npm:3.3.5"
+    enzyme-to-json: "npm:3.6.2"
     esbuild: "npm:^0.25.10"
     esbuild-register: "npm:^3.6.0"
     eslint: "npm:^8.44.0"
@@ -40179,7 +40190,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:^16.13.0, react-is@npm:^16.13.1, react-is@npm:^16.7.0, react-is@npm:^16.8.1, react-is@npm:^16.8.6":
+"react-is@npm:^16.12.0, react-is@npm:^16.13.0, react-is@npm:^16.13.1, react-is@npm:^16.7.0, react-is@npm:^16.8.1, react-is@npm:^16.8.6":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
   checksum: 10/5aa564a1cde7d391ac980bedee21202fc90bdea3b399952117f54fb71a932af1e5902020144fb354b4690b2414a0c7aafe798eb617b76a3d441d956db7726fdf
