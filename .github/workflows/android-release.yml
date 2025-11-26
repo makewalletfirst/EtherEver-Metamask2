@@ -14,17 +14,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # [최적화 1] 디스크 공간 확보 (빌드 전 불필요한 소프트웨어 삭제)
+      # [수정됨] 디스크 청소: Android SDK(/usr/local/lib/android)는 절대 지우지 않도록 수정했습니다.
       - name: Free Disk Space
         run: |
           echo "Listing current space..."
           df -h
-          echo "Removing large directories..."
+          echo "Removing large unused tools..."
+          # 1. .NET 삭제 (약 1~2GB)
           sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
+          # 2. Haskell 삭제
           sudo rm -rf /opt/ghc
+          # 3. CodeQL 캐시 삭제
           sudo rm -rf /opt/hostedtoolcache/CodeQL
+          # 4. Docker 이미지 삭제 (가장 큼)
           sudo docker image prune --all --force
+          
+          # 주의: /usr/local/lib/android는 지우면 안됨! (Android SDK 위치)
+          
           echo "Disk space after cleanup:"
           df -h
 
@@ -51,7 +57,7 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
-      # 기존에 작업했던 Gradle 문법 및 SDK 버전 수정 스크립트
+      # 기존의 Gradle 수정 스크립트 유지
       - name: Fix Deprecated Gradle Syntax and SDK Version
         run: |
           # 1. react-native-aes-crypto-forked
@@ -90,7 +96,7 @@ jobs:
         run: |
           echo $ANDROID_KEYSTORE_BASE64 | base64 --decode > android/app/release.keystore
 
-      # [최적화 2] 아키텍처 제한 및 리소스 제한 적용
+      # Sentry 업로드 비활성화 및 아키텍처 제한 적용
       - name: Build Release APK
         working-directory: android
         env:
@@ -98,12 +104,16 @@ jobs:
           MYAPP_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           MYAPP_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           MYAPP_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          # Sentry 자동 업로드를 꺼서 불필요한 에러 방지 (필요시 true로 변경)
+          # [중요] 사용자가 원했던 설정: Sentry 자동 업로드 끄기
           SENTRY_DISABLE_AUTO_UPLOAD: true 
         run: |
           chmod +x gradlew
           
-          # -PreactNativeArchitectures=... : x86 빌드를 제외하여 용량과 시간을 절약합니다.
+          # [최적화 옵션]
+          # --max-workers=2: 2코어 제한
+          # -PreactNativeArchitectures=arm64-v8a,armeabi-v7a: PC용(x86) 빌드 제외 (시간/용량 절약)
+          # -x bundleReleaseJsAndAssets_SentryUpload... : 혹시 몰라 Sentry 태스크 명시적 제외 시도 (실패해도 무방)
+          
           ./gradlew assembleRelease \
             --no-daemon \
             --max-workers=2 \
