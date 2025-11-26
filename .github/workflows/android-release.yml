@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 디스크 청소
+      # 1. 디스크 청소 (공간 확보)
       - name: Free Disk Space
         run: |
           echo "Cleaning up disk space..."
@@ -23,6 +23,16 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           sudo docker image prune --all --force
           df -h
+
+      # [신규] 2. 가상 메모리(Swap) 4GB 생성 (RAM 부족 해결의 핵심 ⭐️)
+      - name: Enable Swap Memory
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          echo "Swap enabled. Checking memory:"
+          free -h
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -47,45 +57,31 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
-      # 2. 모든 설정 수정 (Gradle, SDK, Lint Bypass, Android Lint Off)
+      # 3. 설정 수정 (Gradle, SDK, Lint Bypass, Android Lint Off)
       - name: Fix Configs & Bypass Lint
         run: |
-          # --- [A] 라이브러리 SDK 버전 및 문법 수정 ---
-          
-          # react-native-aes-crypto-forked
+          # --- [A] SDK & 구문 수정 ---
           FILE_CRYPTO=node_modules/react-native-aes-crypto-forked/android/build.gradle
           sed -i 's/compile /implementation /g' $FILE_CRYPTO
           sed -i '/compileSdkVersion/c\    compileSdkVersion 35' $FILE_CRYPTO
           sed -i '/targetSdkVersion/c\    targetSdkVersion 35' $FILE_CRYPTO
           
-          # react-native-i18n
           sed -i 's/compile /implementation /g' node_modules/react-native-i18n/android/build.gradle
-          
-          # react-native-os
           sed -i 's/compile /implementation /g' node_modules/react-native-os/android/build.gradle
           
-          # metamask_react-native-payments
           FILE_PAYMENTS=node_modules/@metamask/react-native-payments/android/build.gradle
           sed -i '/compileSdkVersion/c\    compileSdkVersion 35' $FILE_PAYMENTS
           sed -i '/targetSdkVersion/c\    targetSdkVersion 35' $FILE_PAYMENTS
           
-          # --- [B] JS Lint 에러 우회 (Metro Bundler) ---
-          
-          # .eslintrc에서 문제의 규칙 삭제
+          # --- [B] JS Lint 에러 우회 ---
           find . -name ".eslintrc*" -exec sed -i '/no-parameter-properties/d' {} +
-          
-          # metro.transform.js 린트 함수 무력화
           if [ -f "metro.transform.js" ]; then
             sed -i "s/lintTransformedFile(/console.log('Skipped Lint:', /g" metro.transform.js
           fi
           
-          # --- [C] [중요] Android Lint 완전 차단 (build.gradle 수정) ---
-          
-          # app/build.gradle 파일에 lintOptions 블록을 강제로 삽입하여 Release 빌드 시 검사를 끕니다.
+          # --- [C] Android Lint 완전 차단 ---
           FILE_APP_GRADLE=android/app/build.gradle
-          # 이미 lintOptions가 있을 수 있으니 안전하게 android 블록 시작 직후에 삽입
           sed -i '/android {/a\    lintOptions {\n        checkReleaseBuilds false\n        abortOnError false\n    }' $FILE_APP_GRADLE
-          echo "Inject lintOptions to disable checkReleaseBuilds into $FILE_APP_GRADLE"
 
       - name: Create Config Files
         run: |
@@ -98,7 +94,7 @@ jobs:
         run: |
           echo $ANDROID_KEYSTORE_BASE64 | base64 --decode > android/app/release.keystore
 
-      # 3. 빌드 실행 (Node 메모리 4GB 할당)
+      # 4. 빌드 실행 (로그를 파일로 저장 + 화면 출력)
       - name: Build Release APK
         working-directory: android
         env:
@@ -107,13 +103,12 @@ jobs:
           MYAPP_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           MYAPP_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           SENTRY_DISABLE_AUTO_UPLOAD: true
-          # Node.js 메모리 4GB
-          NODE_OPTIONS: "--max-old-space-size=4096"
+          # Node 메모리 넉넉하게 6GB (Swap 덕분에 가능)
+          NODE_OPTIONS: "--max-old-space-size=6144"
         run: |
           chmod +x gradlew
           
-          # [수정됨] -x lintVitalRelease 옵션 제거 (모호함 해결)
-          # build.gradle 수정(checkReleaseBuilds false) 덕분에 굳이 제외 안 해도 에러 안 남
+          # 2>&1 | tee build.log -> 화면에도 보여주고 파일로도 저장함
           ./gradlew assembleRelease \
             --no-daemon \
             --max-workers=2 \
@@ -121,9 +116,25 @@ jobs:
             -Dorg.gradle.jvmargs="-Xmx3072m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError" \
             -x lint \
             -x test \
-            --stacktrace
+            --stacktrace 2>&1 | tee build.log
+
+      # 5. [신규] 빌드 실패 시 에러 요약 보여주기 (스크롤 고통 해방)
+      - name: Print Build Failure Summary
+        if: failure() # 앞 단계가 실패했을 때만 실행
+        working-directory: android
+        run: |
+          echo "=========================================="
+          echo "       BUILD FAILURE SUMMARY              "
+          echo "=========================================="
+          echo "Searching for errors in build.log..."
+          # "Error", "Caused by", "FAILURE" 가 포함된 줄과 그 앞뒤 2줄을 출력
+          grep -C 2 -E "Error:|Caused by:|FAILURE:|Execution failed" build.log || echo "No standard error keywords found."
+          echo "=========================================="
+          echo "End of Summary"
+          echo "=========================================="
 
       - name: Upload APK Artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-release
